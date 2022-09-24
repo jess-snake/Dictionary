@@ -259,13 +259,6 @@ def makeNew():
 #Prompt user to create a new filename
         dp.fileprompt()
         
-        fn = dp.load_object("filename.pickle")
-        tempdict = dp.load_object("dictionary.pickle")
-        
-        print(fn.param)
-        print(tempdict)
-        print(old_dict)
-        
 #Continue to next step
         time.sleep(1)
         PromptUser()
