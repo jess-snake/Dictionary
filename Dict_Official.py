@@ -1,5 +1,4 @@
 import pandas as pd, time, string, os, pickle, xlsxwriter
-import Dictionary
 import DictionPickle as dp
 
 
@@ -66,6 +65,8 @@ def RecordWords():
         AddToDict()
     else:
         print('You did not use any new words this time.')
+        print(new_dict)
+        print(old_dict)
  
 #Check if user wants to update the current dictionary 
 def AddToDict():
@@ -223,7 +224,6 @@ def checkFilename():
     global newFile
     
     if os.path.isfile("filename.pickle"):
-        newFile = "False"
         
 #If the filename already exists, load it
         fn = dp.load_object("filename.pickle")
@@ -239,18 +239,42 @@ def checkFilename():
         PromptUser()
         
 def makeNew():
+#Create a variable to detect if a new file is created this session   
+    global newFile
+    
     New_YN = input()
     New_YN = New_YN.lower()
     
     if New_YN == 'yes':
+#Reset dictionary variables
+        old_dict = {}
+        curr_dict = {}
+        
+#Update variable that is tracking new file       
+        newFile = "True"
+        
+#Reset the pickled dictionary
+        dp.save_diction(curr_dict)
+
+#Prompt user to create a new filename
         dp.fileprompt()
         
-#New file is created, update variable that is tracking it        
-        newFile = "True"
-        time.sleep(2)
+        fn = dp.load_object("filename.pickle")
+        tempdict = dp.load_object("dictionary.pickle")
+        
+        print(fn.param)
+        print(tempdict)
+        print(old_dict)
+        
+#Continue to next step
+        time.sleep(1)
         PromptUser()
         
     elif New_YN == 'no':
+        newFile = "False"
+        old_dict = dict(loadDict)
+        curr_dict = dict(loadDict)
+        
         print("Existing file will be used.")
         time.sleep(1)
         PromptUser()
@@ -269,18 +293,17 @@ def makeNewAgain():
 def dictCheck():
     global old_dict
     global curr_dict
+    global loadDict
+    
+    old_dict = {}
+    curr_dict = {}
     
     if os.path.isfile("dictionary.pickle"):
         loadDict = dp.load_object("dictionary.pickle")
         print("Loaded most recent dictionary...")
         time.sleep(1)
         
-        old_dict = loadDict
-        curr_dict = dict(loadDict)
-        
     else:
-        old_dict = {}
-        curr_dict = {}
         print("No dictionary found.")
         time.sleep(1)
         print("New dictionary created.")
