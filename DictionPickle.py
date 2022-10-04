@@ -40,7 +40,8 @@ def fileprompt():
 def createFile():
     global text
     text = input()
-    filename = text + "_V1.xlsx"
+    global filename
+    filename = text + ".xlsx"
     
 #Use class and save_object function to store input
     
@@ -83,23 +84,19 @@ def UpdateFile(filename):
             
         else:
         
-            print("File version will be saved as 'V1'.")
+            #print("File version will be saved as 'V1'.")
 
             versionNum = 1
 
             versionNum = str(versionNum)
             
             #Break down original filename to 1st portion
-            breakdown_1 = askForFile.partition('.xlsx')
+            breakdown_1 = fn.partition('.xlsx')
             FN_part1 = breakdown_1[0]
             FN_part1 = str(FN_part1)
 
             #Create new filename
             fnNew = FN_part1 + "_V" + versionNum + ".xlsx"
-        
-            #Save file   
-            workbook.save(filename = fnNew)
-            print("Saved successfully as " + fnNew)
             
         obj = SaveFile(fnNew)
         save_object(obj)

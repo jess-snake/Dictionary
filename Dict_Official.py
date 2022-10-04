@@ -1,4 +1,4 @@
-import pandas as pd, time, string, os, pickle, xlsxwriter
+import pandas as pd, time, string, os, pickle, xlsxwriter, openpyxl
 import DictionPickle as dp
 
 
@@ -6,7 +6,6 @@ import DictionPickle as dp
 
 #Read the words from input
 def RecordWords():
-
 #Create variables
     global words
     global create_list
@@ -112,6 +111,8 @@ def exportCheck():
     
     #Check if the file was created this session
         if newFile == "True":
+            dp.UpdateFile("filename.pickle")
+            time.sleep(1)
             print("Exporting...")
             time.sleep(1)
             ExportDict()
@@ -144,6 +145,7 @@ def SaveOrRep():
         ExportDict()
     elif SavRep == 'save new':
         dp.UpdateFile("filename.pickle")
+        fn = dp.load_object("filename.pickle")
         print("File will be saved as a new version: " + fn.param)
         time.sleep(2)
         print("Exporting...")
@@ -208,8 +210,8 @@ def ExportDict():
         
 #Ask user to enter in text
 def PromptUser():
-
 #Load the filename in case it was just created
+    global fn
     fn = dp.load_object("filename.pickle")
     
 #Prompt user to enter text
@@ -217,26 +219,13 @@ def PromptUser():
     RecordWords()
     
 def checkFilename():
-#Create variable to track filename 
-    global fn
-
-#Create a variable to detect if a new file is created this session   
-    global newFile
-    
-    if os.path.isfile("filename.pickle"):
         
 #If the filename already exists, load it
-        fn = dp.load_object("filename.pickle")
-        print("You have an existing file: " + fn.param)
-        time.sleep(1)
-        print("Would you like to create a new file?")
-        makeNew()
-    else:
-        print("No existing file.")
-        newFile = "True"
-        dp.fileprompt()
-        time.sleep(2)
-        PromptUser()
+    fn = dp.load_object("filename.pickle")
+    print("You have an existing file: " + fn.param)
+    time.sleep(1)
+    print("Would you like to use your existing filename?")
+    makeNew()
         
 def makeNew():
 #Create a variable to detect if a new file is created this session   
@@ -245,7 +234,38 @@ def makeNew():
     New_YN = input()
     New_YN = New_YN.lower()
     
-    if New_YN == 'yes':
+    if New_YN == 'no':
+        print("Would you like to create a new file or load an existing one? (Type 'Create New' or 'Load File')")
+        NeworLoad()
+      
+    elif New_YN == 'yes':
+        newFile = "False"
+        old_dict = dict(loadDict)
+        curr_dict = dict(loadDict)
+        
+        print("Existing file will be used.")
+        time.sleep(1)
+        PromptUser()
+        
+    else:
+        print("Sorry, I didn't get that.")
+        time.sleep(2)
+        makeNewAgain()
+        
+def makeNewAgain():
+    print("Would you like to use your existing filename? (Type yes or no)")
+    makeNew()
+    
+#Check if user wants to create a new file or load an existing one
+
+def NeworLoad():
+    NL_in = input()
+    NL = NL_in.lower()
+    
+#Create a variable to detect if a new file is created this session   
+    global newFile
+    
+    if NL == 'create new':
 #Reset dictionary variables
         old_dict = {}
         curr_dict = {}
@@ -263,23 +283,62 @@ def makeNew():
         time.sleep(1)
         PromptUser()
         
-    elif New_YN == 'no':
+    elif NL == 'load file':
         newFile = "False"
-        old_dict = dict(loadDict)
-        curr_dict = dict(loadDict)
-        
-        print("Existing file will be used.")
-        time.sleep(1)
-        PromptUser()
+        print("Please enter in the filename (without .xlsx).")
+        getFile()
         
     else:
         print("Sorry, I didn't get that.")
-        time.sleep(2)
-        makeNewAgain()
+        NLAgain()
         
-def makeNewAgain():
-    print("Do you want to create a new file? (Type yes or no)")
-    makeNew()
+def NLAgain():
+    
+    print("Would you like to create a new file or load an existing one? (Type 'Create New' or 'Load File')")
+    NeworLoad()
+    
+def getFile():
+    global old_dict
+    global curr_dict
+
+#Get the filename and store it
+    dp.createFile()
+    loadFN = dp.filename
+    print("Your filename is: " + loadFN)
+    time.sleep(1)
+    print("File stored.")
+    time.sleep(1)
+    
+ #Grab workbook sheets
+    loadData = pd.ExcelFile(loadFN)
+    
+#Create dataframe
+    df = loadData.parse('Sheet1')
+    
+#Load workbook, grab Sheet1
+    ps = openpyxl.load_workbook(loadFN)
+    sheet = ps['Sheet1']
+    
+#Create a temporary dictionary 
+    temp_dict = {}
+    
+#Use a for loop to pull out values from the sheet
+    for r in range(2, sheet.max_row + 1):
+        number = sheet['A' + str(r)].value
+        term = sheet['B' + str(r)].value
+        
+    #Put values in the dictionary
+        temp_dict[number] = term
+    
+#Save temp dictionary
+    dp.save_diction(temp_dict)
+    
+#Load dictionary and set it to old and current dicts
+    loadDict = dp.load_object("dictionary.pickle")
+    old_dict = dict(loadDict)
+    curr_dict = dict(loadDict)
+    PromptUser()
+    
 
 #Check for existing dictionary
 
@@ -295,13 +354,12 @@ def dictCheck():
         loadDict = dp.load_object("dictionary.pickle")
         print("Loaded most recent dictionary...")
         time.sleep(1)
+        checkFilename()
         
     else:
         print("No dictionary found.")
         time.sleep(1)
-        print("New dictionary created.")
-        time.sleep(1)
-    
-    checkFilename()
+        print("Would you like to create a new file or load an existing one? Type 'Create New' or 'Load File')")
+        NeworLoad()
 
 dictCheck()
